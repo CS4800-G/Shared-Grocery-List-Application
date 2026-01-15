@@ -1,0 +1,105 @@
+/* ---- Global Reset ---- */
+* {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ---- Dark Theme Colors ---- */
+:root {
+    --bg: #121212;
+    --surface: #1e1e1e;
+    --surface-alt: #2a2a2a;
+    --text: #eaeaea;
+    --muted: #b0b0b0;
+    --accent: #4da3ff;
+    --danger: #ff6b6b;
+    --border: #333;
+}
+
+/* ---- Page ---- */
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ---- Headings ---- */
+h1, h2, h3, h4 {
+    margin-top: 0;
+    color: var(--text);
+}
+
+/* ---- Text ---- */
+p {
+    color: var(--muted);
+}
+
+/* ---- Links ---- */
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Forms ---- */
+form {
+    margin-bottom: 1.5rem;
+}
+
+input, select {
+    background-color: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.6rem 0.7rem;
+    margin-right: 0.4rem;
+    border-radius: 6px;
+}
+
+input::placeholder {
+    color: var(--muted);
+}
+
+/* ---- Buttons ---- */
+button {
+    background-color: var(--accent);
+    color: #000;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* ---- Lists ---- */
+ul, ol {
+    padding-left: 1.2rem;
+}
+
+li {
+    background-color: var(--surface);
+    padding: 0.6rem 0.8rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+/* ---- Sections ---- */
+hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+}
+
+/* ---- Flash Messages ---- */
+ul li[style*="color:red"] {
+    background-color: #2b1b1b;
+    color: var(--danger);
+}
