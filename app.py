@@ -11,37 +11,37 @@ app.secret_key = "dev-secret-change-me"
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        action = request.form["action"]
-        username = request.form["username"].strip()
+        username = request.form.get("username", "").strip()
+        join_code = request.form.get("join_code", "").strip()
+        household_name = request.form.get("household_name", "").strip()
 
-        if action == "create":
-            household_name = request.form["household_name"].strip()
+        if not username:
+            flash("Username is required.")
+            return redirect(url_for("index"))
+
+        if household_name:
             join_code = create_household(household_name)
-
             data = load_household(join_code)
             add_user(data, username)
             save_household(join_code, data)
 
-            session["join_code"] = join_code
-            session["username"] = username
-            session["current_list"] = "default"
-            return redirect(url_for("household"))
-
-        elif action == "join":
-            join_code = request.form["join_code"].strip().upper()
+        elif join_code:
             data = load_household(join_code)
-
             if not data:
                 flash("Invalid join code.")
                 return redirect(url_for("index"))
-
             add_user(data, username)
             save_household(join_code, data)
 
-            session["join_code"] = join_code
-            session["username"] = username
-            session["current_list"] = "default"
-            return redirect(url_for("household"))
+        else:
+            flash("Provide a join code or create a household.")
+            return redirect(url_for("index"))
+
+        session["username"] = username
+        session["join_code"] = join_code
+        session["current_list"] = "default"
+
+        return redirect(url_for("household"))
 
     return render_template("index.html")
 
@@ -60,17 +60,14 @@ def household():
         return redirect(url_for("index"))
 
     if request.method == "POST":
-        # Create new list
         if "new_list" in request.form:
             list_name = request.form["new_list"].strip()
             add_list(data, list_name)
             session["current_list"] = list_name
 
-        # Switch list
         elif "switch_list" in request.form:
             session["current_list"] = request.form["switch_list"]
 
-        # Add grocery item
         else:
             add_item(
                 data,
@@ -78,7 +75,7 @@ def household():
                 request.form["name"],
                 int(request.form["quantity"]),
                 float(request.form["price"]),
-                username
+                username,
             )
 
         save_household(join_code, data)
@@ -91,11 +88,25 @@ def household():
         "household.html",
         household=data["household"],
         user=username,
+        join_code=join_code,
         lists=data["lists"],
         current_list=current_list,
         items=items,
-        totals=totals
+        totals=totals,
     )
+
+
+@app.route("/delete_item", methods=["POST"])
+def delete_item_route():
+    join_code = session.get("join_code")
+    list_name = session.get("current_list")
+    item_index = int(request.form["item_index"])
+
+    if join_code and list_name:
+        delete_item(join_code, list_name, item_index)
+
+    return redirect(url_for("household"))
+
 
 @app.route("/analytics")
 def analytics():
@@ -114,19 +125,8 @@ def analytics():
     return render_template(
         "analytics.html",
         household=data["household"],
-        analytics=analytics
+        analytics=analytics,
     )
-
-@app.route("/delete_item", methods=["POST"])
-def delete_item_route():
-    join_code = session.get("join_code")
-    list_name = session.get("current_list")
-    item_index = int(request.form["item_index"])
-
-    if join_code and list_name:
-        delete_item(join_code, list_name, item_index)
-
-    return redirect(url_for("household"))
 
 
 if __name__ == "__main__":
