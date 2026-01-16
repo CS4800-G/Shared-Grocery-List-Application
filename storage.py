@@ -66,6 +66,13 @@ def add_item(data, list_name, name, quantity, price, user):
         "created_at": datetime.utcnow().isoformat()
     })
 
+def delete_item(join_code, list_name, item_index):
+    data = load_household(join_code)
+    try:
+        del data["lists"][list_name]["items"][item_index]
+        save_household(join_code, data)
+    except (KeyError, IndexError):
+        pass
 
 def calculate_totals(items):
     totals = {}
@@ -74,3 +81,50 @@ def calculate_totals(items):
         totals.setdefault(user, 0)
         totals[user] += item["quantity"] * item["price"]
     return totals
+
+def analytics_all_lists(data):
+    """
+    Aggregates analytics across all lists in a household.
+    """
+    totals_by_user = {}
+    totals_by_list = {}
+    totals_by_item = {}
+    total_spend = 0
+    total_items = 0
+
+    for list_name, list_data in data["lists"].items():
+        list_total = 0
+
+        for item in list_data["items"]:
+            cost = item["quantity"] * item["price"]
+            user = item["added_by"]
+            name = item["name"]
+
+            # Per-user totals
+            totals_by_user.setdefault(user, 0)
+            totals_by_user[user] += cost
+
+            # Per-item totals
+            totals_by_item.setdefault(name, 0)
+            totals_by_item[name] += cost
+
+            list_total += cost
+            total_spend += cost
+            total_items += item["quantity"]
+
+        totals_by_list[list_name] = list_total
+
+    # Sort item totals descending
+    top_items = sorted(
+        totals_by_item.items(),
+        key=lambda x: x[1],
+        reverse=True
+    )
+
+    return {
+        "totals_by_user": totals_by_user,
+        "totals_by_list": totals_by_list,
+        "top_items": top_items,
+        "total_spend": total_spend,
+        "total_items": total_items,
+    }

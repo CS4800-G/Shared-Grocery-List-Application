@@ -1,8 +1,8 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
-
-from storage import (add_item, add_list, add_user, calculate_totals,
-                     create_household, load_household, save_household)
+from storage import (add_item, add_list, add_user, analytics_all_lists,
+                     calculate_totals, create_household, delete_item,
+                     load_household, save_household)
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-change-me"
@@ -96,6 +96,37 @@ def household():
         items=items,
         totals=totals
     )
+
+@app.route("/analytics")
+def analytics():
+    join_code = session.get("join_code")
+    username = session.get("username")
+
+    if not join_code or not username:
+        return redirect(url_for("index"))
+
+    data = load_household(join_code)
+    if not data:
+        return redirect(url_for("index"))
+
+    analytics = analytics_all_lists(data)
+
+    return render_template(
+        "analytics.html",
+        household=data["household"],
+        analytics=analytics
+    )
+
+@app.route("/delete_item", methods=["POST"])
+def delete_item_route():
+    join_code = session.get("join_code")
+    list_name = session.get("current_list")
+    item_index = int(request.form["item_index"])
+
+    if join_code and list_name:
+        delete_item(join_code, list_name, item_index)
+
+    return redirect(url_for("household"))
 
 
 if __name__ == "__main__":
